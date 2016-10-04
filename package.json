@@ -1,0 +1,56 @@
+{
+    "author": "Maxwell Moseley",
+    "dependencies": {},
+    "keywords": [],
+    "name": "selina-1",
+    "pebble": {
+        "displayName": "Selina 1",
+        "enableMultiJS": false,
+        "messageKeys": [],
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "characterRegex": "[0-9: ]",
+                    "file": "fonts/Roboto-Bold.ttf",
+                    "name": "TIME_54",
+                    "targetPlatforms": null,
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[a-zA-Z]",
+                    "file": "fonts/OpenSans-Regular.ttf",
+                    "name": "REG_18",
+                    "targetPlatforms": null,
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[0-9% ]",
+                    "file": "fonts/OpenSans-Light.ttf",
+                    "name": "LIGHT_12",
+                    "targetPlatforms": null,
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[0-9:A-Za-z. ]",
+                    "file": "fonts/OpenSans-Bold.ttf",
+                    "name": "BOLD_20",
+                    "targetPlatforms": null,
+                    "type": "font"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk",
+            "diorite"
+        ],
+        "uuid": "653afd18-6b42-47f0-b6b5-49ca36ebfa67",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.0.0"
+}
