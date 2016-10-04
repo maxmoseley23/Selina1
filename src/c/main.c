@@ -18,7 +18,7 @@ static void tick_handler(struct tm *t, TimeUnits changed) {
   if (MINUTE_UNIT & changed) {
     strftime(time_buffer, sizeof(time_buffer), 
     clock_is_24h_style() ?"%k:%M" : "%l:%M", t);
-    text_layer_set_text(time_layer, time_buffer+((' ' == time_buffer[0])?1:0));
+    text_layer_set_text(time_layer, time_buffer);
   }
 
   if (DAY_UNIT & changed) {
