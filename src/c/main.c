@@ -7,17 +7,15 @@ static TextLayer *time_layer, *date, *weekday, *battery;
 static char date_buffer[] = "31 Oct";
 static char time_buffer[] = "23:55";
 static char wd_buffer[] = "Wednesday";
-static char b_buffer[] = "100%";
+static char b_buffer[] = "100% - OK";
 
 static void battery_handler(BatteryChargeState charge);
-
-
 
 static void tick_handler(struct tm *t, TimeUnits changed) {
 
   if (MINUTE_UNIT & changed) {
     strftime(time_buffer, sizeof(time_buffer), 
-    clock_is_24h_style() ?"%k:%M" : "%l:%M", t);
+    clock_is_24h_style() ?"%H:%M" : "%I:%M", t);
     text_layer_set_text(time_layer, time_buffer);
   }
 
@@ -25,13 +23,14 @@ static void tick_handler(struct tm *t, TimeUnits changed) {
     char month[]="Dec";
     strftime(wd_buffer, sizeof(wd_buffer), "%A", t);
     strftime(month, sizeof(month), "%b", t);
-    snprintf(date_buffer, sizeof(date_buffer), "%d %s.", t->tm_mday, month);
+    snprintf(date_buffer, sizeof(date_buffer), "%d %s", t->tm_mday, month);
     text_layer_set_text(date, date_buffer);
     text_layer_set_text(weekday, wd_buffer);
   }
 }
 
 static void main_window_load(Window *window) {
+  char *sys_locale = setlocale(LC_ALL, "");
   
   window_set_background_color(my_window, GColorWhite);
   
@@ -114,8 +113,12 @@ static void battery_handler(BatteryChargeState charge) {
     text_layer_set_text_color(battery, GColorBlack);
   #endif
 
-  
-  snprintf(b_buffer, sizeof(b_buffer), "%d%%", charge.charge_percent);
+  if (connection_service_peek_pebble_app_connection()) {
+    snprintf(b_buffer, sizeof(b_buffer), "%d%% - OK", charge.charge_percent);
+//     snprintf(b_buffer, sizeof(b_buffer), "%d%%", charge.charge_percent);
+  } else {
+    snprintf(b_buffer, sizeof(b_buffer), "%d%%", charge.charge_percent);
+  }
   text_layer_set_text(battery, b_buffer);
   
 }
@@ -130,6 +133,7 @@ static void app_connection_handler(bool connected) {
       };
       vibes_enqueue_custom_pattern(pat);
   }
+  battery_handler(battery_state_service_peek());
 }
 
 void handle_init(void) {
