@@ -4,9 +4,9 @@
     "pebble-fctx": "^1.6.2"
   },
   "keywords": [],
-  "name": "selina-1",
+  "name": "selina-int",
   "pebble": {
-    "displayName": "Selina 1",
+    "displayName": "Selina Int",
     "enableMultiJS": false,
     "messageKeys": [],
     "projectType": "native",
@@ -52,7 +52,7 @@
       "watchface": true
     }
   },
-  "version": "1.3.0",
+  "version": "1.4.0",
   "devDependencies": {
     "pebble-fctx-compiler": "^1.2.1"
   }

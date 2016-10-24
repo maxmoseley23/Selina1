@@ -9,7 +9,7 @@ static TextLayer *date, *weekday, *battery;
 static Layer *time_layer;
 FFont* time_font;
 
-static char date_buffer[] = "31 Oct";
+static char date_buffer[] = "31 Octubre";
 static char time_buffer[] = "23:55";
 static char wd_buffer[] = "Wednesday";
 static char b_buffer[] = "100% - OK";
