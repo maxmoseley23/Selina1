@@ -57,7 +57,7 @@ static void tick_handler(struct tm *t, TimeUnits changed) {
   }
 
   if (DAY_UNIT & changed) {
-    char month[]="Dec";
+    char month[]="Decembre";
     strftime(wd_buffer, sizeof(wd_buffer), "%A", t);
     strftime(month, sizeof(month), "%b", t);
     snprintf(date_buffer, sizeof(date_buffer), "%d %s", t->tm_mday, month);
