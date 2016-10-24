@@ -1,8 +1,13 @@
 #include <pebble.h>
+#include "fctx/fctx.h"
+#include "fctx/ffont.h"
+
+
 Window *my_window;
 
-static TextLayer *time_layer, *date, *weekday, *battery;
-
+static TextLayer *date, *weekday, *battery;
+static Layer *time_layer;
+FFont* time_font;
 
 static char date_buffer[] = "31 Oct";
 static char time_buffer[] = "23:55";
@@ -11,12 +16,44 @@ static char b_buffer[] = "100% - OK";
 
 static void battery_handler(BatteryChargeState charge);
 
+void time_layer_update(Layer* layer, GContext* ctx) {
+
+
+  GRect bounds = layer_get_bounds(layer);
+ FPoint center = FPointI(bounds.size.w / 2, 
+  (bounds.size.h / 2) - 2
+  );
+
+  int font_size;
+
+  #if defined(PBL_ROUND)
+    font_size = 52;
+  #else
+    font_size = 49;
+  #endif
+
+  FContext fctx;
+  fctx_init_context(&fctx, ctx);
+
+  fctx_begin_fill(&fctx);
+  fctx_set_offset(&fctx, center);
+  fctx_set_text_em_height(&fctx, time_font, font_size);
+  fctx_set_fill_color(&fctx, GColorBlack);
+  fctx_draw_string(&fctx, time_buffer, time_font, GTextAlignmentCenter, FTextAnchorMiddle);
+  fctx_end_fill(&fctx);
+
+
+  fctx_deinit_context(&fctx);
+
+
+}
+
 static void tick_handler(struct tm *t, TimeUnits changed) {
 
   if (MINUTE_UNIT & changed) {
     strftime(time_buffer, sizeof(time_buffer), 
     clock_is_24h_style() ?"%H:%M" : "%I:%M", t);
-    text_layer_set_text(time_layer, time_buffer);
+    layer_mark_dirty(time_layer);
   }
 
   if (DAY_UNIT & changed) {
@@ -37,22 +74,14 @@ static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
 
-  time_layer = text_layer_create(
-    PBL_IF_ROUND_ELSE(
-      GRect(0, 1*(bounds.size.h/2) - 34, bounds.size.w, bounds.size.h),
+  time_font = ffont_create_from_resource(RESOURCE_ID_TIME_FONT);
+
+  time_layer = layer_create(PBL_IF_ROUND_ELSE(
+      GRect(0, 1*(bounds.size.h/2) - 32, bounds.size.w, bounds.size.h),
       GRect(0, 1*(bounds.size.h/2) - 32, bounds.size.w, bounds.size.h)
     ));
-  text_layer_set_font(time_layer, 
-                      PBL_IF_ROUND_ELSE(
-                        fonts_load_custom_font(resource_get_handle(RESOURCE_ID_TIME_54)),
-                        fonts_get_system_font(FONT_KEY_ROBOTO_BOLD_SUBSET_49)
-                      )
-   );
-  text_layer_set_background_color(time_layer, GColorClear);
-  text_layer_set_text_color(time_layer, GColorBlack);
-  text_layer_set_text_alignment(time_layer, GTextAlignmentCenter);
-  text_layer_set_text(time_layer, "23:59");
-  layer_add_child(window_layer, text_layer_get_layer(time_layer));
+  layer_set_update_proc(time_layer, time_layer_update);
+  layer_add_child(window_layer, time_layer);
   
   date = text_layer_create(
     PBL_IF_ROUND_ELSE(
@@ -158,7 +187,8 @@ void handle_init(void) {
 void handle_deinit(void) {
 
   window_destroy(my_window);
-  text_layer_destroy(time_layer);
+  ffont_destroy(time_font);
+  layer_destroy(time_layer);
   text_layer_destroy(weekday);
   text_layer_destroy(battery);
   text_layer_destroy(date);
