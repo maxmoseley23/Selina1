@@ -18,11 +18,9 @@
           "file": "fonts/Roboto-Bold.ffont"
         },
         {
-          "characterRegex": "[.0-9A-Za-z ûéáçäì ]",
-          "file": "fonts/OpenSans-Regular.ttf",
-          "name": "REG_18",
-          "targetPlatforms": null,
-          "type": "font"
+          "name": "BOLD_FONT",
+          "file": "fonts/AdelleSans-Bold.ffont",
+          "type": "raw"
         },
         {
           "characterRegex": "[0-9%-OKDC ]",
@@ -32,11 +30,9 @@
           "type": "font"
         },
         {
-          "characterRegex": "[.0-9A-Za-z ûéáçäì ]",
-          "file": "fonts/OpenSans-Bold.ttf",
-          "name": "BOLD_20",
-          "targetPlatforms": null,
-          "type": "font"
+          "name": "REG_FONT",
+          "file": "fonts/AdelleSans-Regular.ffont",
+          "type": "raw"
         }
       ]
     },
@@ -52,7 +48,7 @@
       "watchface": true
     }
   },
-  "version": "1.6.0",
+  "version": "1.7.0",
   "devDependencies": {
     "pebble-fctx-compiler": "^1.2.1"
   }

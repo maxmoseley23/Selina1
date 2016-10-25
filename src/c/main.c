@@ -5,9 +5,12 @@
 
 Window *my_window;
 
-static TextLayer *date, *weekday, *battery;
-static Layer *time_layer;
+static TextLayer *battery;
+static Layer *time_layer, *date_layer;
 FFont* time_font;
+FFont* bold_font;
+FFont* reg_font;
+
 
 static char date_buffer[] = "31 Octubre";
 static char time_buffer[] = "23:55";
@@ -15,6 +18,45 @@ static char wd_buffer[] = "Wednesday";
 static char b_buffer[] = "100% - OK";
 
 static void battery_handler(BatteryChargeState charge);
+
+void date_layer_update(Layer* layer, GContext* ctx) {
+
+  GRect bounds = layer_get_bounds(layer);
+ FPoint weekday_pos =  PBL_IF_ROUND_ELSE(
+      FPointI(bounds.size.w / 2, 1*(bounds.size.h/2) + 44),
+      FPointI(bounds.size.w / 2, 1*(bounds.size.h/2) + 40)
+    );
+
+ FPoint date_pos =  PBL_IF_ROUND_ELSE(
+    FPointI(bounds.size.w / 2, 1*(bounds.size.h/2) - 42),
+    FPointI(bounds.size.w / 2, 1*(bounds.size.h/2) - 41)
+    );
+
+
+
+
+ int weekday_font_size = 18;
+ int date_font_size = 20;
+  FContext fctx;
+  fctx_init_context(&fctx, ctx);
+
+  fctx_begin_fill(&fctx);
+  fctx_set_offset(&fctx, weekday_pos);
+  fctx_set_text_em_height(&fctx, reg_font, weekday_font_size);
+  fctx_set_fill_color(&fctx, GColorBlack);
+  fctx_draw_string(&fctx, wd_buffer, reg_font, GTextAlignmentCenter, FTextAnchorMiddle);
+  fctx_end_fill(&fctx);
+
+  fctx_begin_fill(&fctx);
+  fctx_set_offset(&fctx, date_pos);
+  fctx_set_text_em_height(&fctx, bold_font, date_font_size);
+  fctx_set_fill_color(&fctx, PBL_IF_COLOR_ELSE(GColorTiffanyBlue, GColorBlack));
+  fctx_draw_string(&fctx, date_buffer, bold_font, GTextAlignmentCenter, FTextAnchorMiddle);
+  fctx_end_fill(&fctx);
+
+
+  fctx_deinit_context(&fctx);
+}
 
 void time_layer_update(Layer* layer, GContext* ctx) {
 
@@ -27,7 +69,7 @@ void time_layer_update(Layer* layer, GContext* ctx) {
   int font_size;
 
   #if defined(PBL_ROUND)
-    font_size = 52;
+    font_size = 54;
   #else
     font_size = 49;
   #endif
@@ -39,7 +81,7 @@ void time_layer_update(Layer* layer, GContext* ctx) {
   fctx_set_offset(&fctx, center);
   fctx_set_text_em_height(&fctx, time_font, font_size);
   fctx_set_fill_color(&fctx, GColorBlack);
-  fctx_draw_string(&fctx, time_buffer, time_font, GTextAlignmentCenter, FTextAnchorMiddle);
+  fctx_draw_string(&fctx, time_buffer+((' ' == time_buffer[0])?1:0), time_font, GTextAlignmentCenter, FTextAnchorMiddle);
   fctx_end_fill(&fctx);
 
 
@@ -52,7 +94,7 @@ static void tick_handler(struct tm *t, TimeUnits changed) {
 
   if (MINUTE_UNIT & changed) {
     strftime(time_buffer, sizeof(time_buffer), 
-    clock_is_24h_style() ?"%H:%M" : "%I:%M", t);
+    clock_is_24h_style() ?"%k:%M" : "%Il%M", t);
     layer_mark_dirty(time_layer);
   }
 
@@ -61,8 +103,7 @@ static void tick_handler(struct tm *t, TimeUnits changed) {
     strftime(wd_buffer, sizeof(wd_buffer), "%A", t);
     strftime(month, sizeof(month), "%b", t);
     snprintf(date_buffer, sizeof(date_buffer), "%d %s", t->tm_mday, month);
-    text_layer_set_text(date, date_buffer);
-    text_layer_set_text(weekday, wd_buffer);
+    layer_mark_dirty(date_layer);
   }
 }
 
@@ -75,6 +116,8 @@ static void main_window_load(Window *window) {
   GRect bounds = layer_get_bounds(window_layer);
 
   time_font = ffont_create_from_resource(RESOURCE_ID_TIME_FONT);
+  bold_font = ffont_create_from_resource(RESOURCE_ID_BOLD_FONT);
+  reg_font = ffont_create_from_resource(RESOURCE_ID_REG_FONT);
 
   time_layer = layer_create(PBL_IF_ROUND_ELSE(
       GRect(0, 1*(bounds.size.h/2) - 32, bounds.size.w, bounds.size.h),
@@ -82,19 +125,7 @@ static void main_window_load(Window *window) {
     ));
   layer_set_update_proc(time_layer, time_layer_update);
   layer_add_child(window_layer, time_layer);
-  
-  date = text_layer_create(
-    PBL_IF_ROUND_ELSE(
-      GRect(0, 1*(bounds.size.h/2) - 55, bounds.size.w, bounds.size.h),
-      GRect(0, 1*(bounds.size.h/2) - 53, bounds.size.w, bounds.size.h)
-    ));
-  text_layer_set_font(date, fonts_load_custom_font(
-    resource_get_handle(RESOURCE_ID_BOLD_20)));
-  text_layer_set_background_color(date, GColorClear);
-  text_layer_set_text_color(date, PBL_IF_COLOR_ELSE(GColorTiffanyBlue, GColorBlack));
-  text_layer_set_text_alignment(date, GTextAlignmentCenter);
-  text_layer_set_text(date, "4 Oct");
-  layer_add_child(window_layer, text_layer_get_layer(date));
+
   
   battery = text_layer_create(
     PBL_IF_ROUND_ELSE(
@@ -108,19 +139,16 @@ static void main_window_load(Window *window) {
   text_layer_set_text_alignment(battery, GTextAlignmentCenter);
 //   text_layer_set_text(battery, "100%");
   layer_add_child(window_layer, text_layer_get_layer(battery));
-  
-  weekday = text_layer_create(
+
+
+  date_layer = layer_create(
     PBL_IF_ROUND_ELSE(
       GRect(0, 1*(bounds.size.h/2) + 32, bounds.size.w, bounds.size.h),
       GRect(0, 1*(bounds.size.h/2) + 29, bounds.size.w, bounds.size.h)
     ));
-  text_layer_set_font(weekday, fonts_load_custom_font(
-    resource_get_handle(RESOURCE_ID_REG_18)));
-  text_layer_set_background_color(weekday, GColorClear);
-  text_layer_set_text_color(weekday, GColorDarkGray);
-  text_layer_set_text_alignment(weekday, GTextAlignmentCenter);
-  text_layer_set_text(weekday, "Wednesday");
-  layer_add_child(window_layer, text_layer_get_layer(weekday));
+  layer_set_update_proc(date_layer, date_layer_update);
+  layer_add_child(window_layer, date_layer);
+  
   
   time_t temp = time(NULL);
   struct tm *tick_time = localtime(&temp);
@@ -188,10 +216,11 @@ void handle_deinit(void) {
 
   window_destroy(my_window);
   ffont_destroy(time_font);
+  ffont_destroy(bold_font);
+  ffont_destroy(reg_font);
   layer_destroy(time_layer);
-  text_layer_destroy(weekday);
+  layer_destroy(date_layer);
   text_layer_destroy(battery);
-  text_layer_destroy(date);
   connection_service_unsubscribe();
   tick_timer_service_unsubscribe();
   battery_state_service_unsubscribe();
